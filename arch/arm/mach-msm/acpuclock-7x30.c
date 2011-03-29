@@ -85,47 +85,49 @@ struct cpufreq_frequency_table freq_table[] = {
     { 2, 184320 },
     { 3, 245760 },
     { 4, 368640 },
-    { 5, 768000 },
+    { 5, 460800 },
+    { 6, 614400 },
+    { 7, 768000 },
 #if defined(CONFIG_MACH_SPADE) || defined(CONFIG_MACH_GLACIER)
-    { 6, 1017600 },
-    { 7, 1113600 },
-    { 8, 1209600 },
-    { 9, 1305600 },
-    { 10, 1401600 },
-    { 11, 1497600 },
-    { 12, 1516800 },
+    { 8, 1017600 },
+    { 9, 1113600 },
+    { 10, 1209600 },
+    { 11, 1305600 },
+    { 12, 1401600 },
+    { 13, 1497600 },
+    { 14, 1516800 },
 #ifndef CONFIG_JESUS_PHONE
-    { 13, CPUFREQ_TABLE_END },
+    { 15, CPUFREQ_TABLE_END },
 #else
     /* Just an example of some of the insanity I was able to pull off on my
        device */
-    { 13, 1612800 },
-    { 14, 1708800 },
-    { 15, 1804800 },
-//    { 16, 1900800 },
+    { 15, 1612800 },
+    { 16, 1708800 },
+    { 17, 1804800 },
+//    { 18, 1900800 },
 //    { 17, 1996800 },
-    { 16, CPUFREQ_TABLE_END },
+    { 18, CPUFREQ_TABLE_END },
 #endif
 #else
-    { 6, 806400 },
-    { 7, 1017600 },
-    { 8, 1113600 },
-    { 9, 1209600 },
-    { 10, 1305600 },
-    { 11, 1401600 },
-    { 12, 1497600 },
-    { 13, 1516800 },
+    { 8, 806400 },
+    { 9, 1017600 },
+    { 10, 1113600 },
+    { 11, 1209600 },
+    { 12, 1305600 },
+    { 13, 1401600 },
+    { 14, 1497600 },
+    { 15, 1516800 },
 #ifndef CONFIG_JESUS_PHONE
-    { 14, CPUFREQ_TABLE_END },
+    { 16, CPUFREQ_TABLE_END },
 #else
     /* Just an example of some of the insanity I was able to pull off on my
        device */
-    { 14, 1612800 },
-    { 15, 1708800 },
-    { 16, 1804800 },
-//    { 17, 1900800 },
+    { 16, 1612800 },
+    { 17, 1708800 },
+    { 18, 1804800 },
+//    { 19, 1900800 },
 //    { 18, 1996800 },
-    { 17, CPUFREQ_TABLE_END },
+    { 18, CPUFREQ_TABLE_END },
 #endif
 #endif
 };
@@ -134,6 +136,7 @@ struct cpufreq_frequency_table freq_table[] = {
 /* Use negative numbers for sources that can't be enabled/disabled */
 #define SRC_LPXO (-2)
 #define SRC_AXI  (-1)
+#ifndef CONFIG_SAFEVOLTAGE
 static struct clkctl_acpu_speed acpu_freq_tbl[] = {
     { 24576,  SRC_LPXO, 0, 0,  30720,  750, VDD_RAW(750) },
     { 61440,  PLL_3,    5, 11, 61440,  750, VDD_RAW(750) },
@@ -145,6 +148,8 @@ static struct clkctl_acpu_speed acpu_freq_tbl[] = {
     { 184320, PLL_3,    5, 4,  61440,  725, VDD_RAW(725) },
     { 245760, PLL_3,    5, 2,  61440,  750, VDD_RAW(775) },
     { 368640, PLL_3,    5, 1,  122800, 800, VDD_RAW(825) },
+    { 460800, PLL_2,    5, 0,  192000, 825, VDD_RAW(850) },
+    { 614400, PLL_2,    5, 0,  192000, 850, VDD_RAW(875) },
     { 768000, PLL_1,    2, 0,  153600, 900, VDD_RAW(900) },
     /* Make sure any freq based from PLL_2 is a multiple of 19200! 
        Voltage tables are being very conservative and are not designed to
@@ -165,11 +170,48 @@ static struct clkctl_acpu_speed acpu_freq_tbl[] = {
     { 1612800, PLL_2,   3, 0,  192000, 1300, VDD_RAW(1325) },
     { 1708800, PLL_2,   3, 0,  192000, 1375, VDD_RAW(1400) },
     { 1804800, PLL_2,   3, 0,  192000, 1425, VDD_RAW(1425) },
+//    { 1900800, PLL_2,   3, 0,  192000, 1525, VDD_RAW(1450) },
+//    { 1996800, PLL_2,   3, 0,  192000, 1450, VDD_RAW(1450) },
+#endif
+    { 0 }
+};
+#else
+static struct clkctl_acpu_speed acpu_freq_tbl[] = {
+    { 24576,  SRC_LPXO, 0, 0,  30720,  900, VDD_RAW(850) },
+    { MAX_AXI_KHZ, SRC_AXI, 1, 0, 61440, 800, VDD_RAW(800) },
+    { 61440,  PLL_3,    5, 11, 61440,  800, VDD_RAW(800) },
+    { 122880, PLL_3,    5, 5,  61440,  825, VDD_RAW(825) },
+    { 184320, PLL_3,    5, 4,  61440,  825, VDD_RAW(825) },
+    { 245760, PLL_3,    5, 2,  61440,  850, VDD_RAW(850) },
+    { 368640, PLL_3,    5, 1,  122800, 900, VDD_RAW(900) },
+    { 460800, PLL_1,    2, 0,  153600, 950, VDD_RAW(950) },
+    { 614400, PLL_1,    2, 0,  153600, 975, VDD_RAW(975) },
+    { 768000, PLL_1,    2, 0,  153600, 1050, VDD_RAW(1050) },
+    /* Make sure any freq based from PLL_2 is a multiple of 19200! 
+       Voltage tables are being very conservative and are not designed to
+       be an undervolt of any sort. */
+#if defined(CONFIG_MACH_SPADE) || defined(CONFIG_MACH_GLACIER)
+    { 1017600, PLL_2,   3, 0,  192000, 1100, VDD_RAW(1100) },
+#else
+    { 806400, PLL_2,    3, 0,  192000, 1100, VDD_RAW(1100) },
+    { 1017600, PLL_2,   3, 0,  192000, 1200, VDD_RAW(1200) },
+#endif
+    { 1113600, PLL_2,   3, 0,  192000, 1200, VDD_RAW(1200) },
+    { 1209600, PLL_2,   3, 0,  192000, 1200, VDD_RAW(1200) },
+    { 1305600, PLL_2,   3, 0,  192000, 1200, VDD_RAW(1200) },
+    { 1401600, PLL_2,   3, 0,  192000, 1300, VDD_RAW(1300) },
+    { 1497600, PLL_2,   3, 0,  192000, 1300, VDD_RAW(1300) },
+    { 1516800, PLL_2,   3, 0,  192000, 1300, VDD_RAW(1300) },
+#ifdef CONFIG_JESUS_PHONE
+    { 1612800, PLL_2,   3, 0,  192000, 1400, VDD_RAW(1400) },
+    { 1708800, PLL_2,   3, 0,  192000, 1400, VDD_RAW(1400) },
+    { 1804800, PLL_2,   3, 0,  192000, 1450, VDD_RAW(1450) },
 //    { 1900800, PLL_2,   3, 0,  192000, 1450, VDD_RAW(1450) },
 //    { 1996800, PLL_2,   3, 0,  192000, 1450, VDD_RAW(1450) },
 #endif
     { 0 }
 };
+#endif
 
 static unsigned long max_axi_rate;
 
