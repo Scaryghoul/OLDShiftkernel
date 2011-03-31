@@ -28,9 +28,11 @@
 #define DEF_FREQUENCY_UP_THRESHOLD		(85)
 #define DEF_FREQUENCY_DOWN_THRESHOLD		(60)
 #define DEFAULT_SLEEP_MAX_FREQ 245760
+#define DEFAULT_SLEEP_MIN_FREQ 122880
 static unsigned int suspended;
 static unsigned int sleep_max_freq=DEFAULT_SLEEP_MAX_FREQ;
-
+static unsigned int sleep_min_freq=DEFAULT_SLEEP_MIN_FREQ;
+static unsigned int sleep_prev_freq;
 /*
  * The polling frequency of this governor depends on the capability of
  * the processor. Default polling frequency is 1000 times the transition
@@ -375,6 +377,12 @@ static void smartass_suspend(int cpu, int suspend)
         if (policy->cur > sleep_max_freq) 
         {
             new_freq = sleep_max_freq;
+        //If the current min speed is greater than the max sleep, we reset the min to 120mhz, for battery savings
+            if (policy->min > sleep_max_freq)
+            {
+                sleep_prev_freq=policy->min;
+                policy->min= sleep_min_freq;
+            }
             if (new_freq > policy->max)
                 new_freq = policy->max;
             if (new_freq < policy->min)
@@ -382,6 +390,12 @@ static void smartass_suspend(int cpu, int suspend)
             __cpufreq_driver_target(policy, new_freq,CPUFREQ_RELATION_H);
         }
     }
+    else //Resetting the min speed
+    {
+        if (policy->min < sleep_prev_freq)
+            policy->min=sleep_prev_freq;
+    }
+    
 }
 
 static void smartass_early_suspend(struct early_suspend *handler) 
