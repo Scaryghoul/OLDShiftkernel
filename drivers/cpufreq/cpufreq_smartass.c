@@ -113,7 +113,7 @@ static unsigned long max_cpu_load;
 * CPU freq will be decreased if measured load < min_cpu_load;
 */
 // default 30
-#define DEFAULT_MIN_CPU_LOAD 70
+#define DEFAULT_MIN_CPU_LOAD 60
 static unsigned long min_cpu_load;
 
 

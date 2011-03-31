@@ -25,14 +25,15 @@
  * It helps to keep variable names smaller, simpler
  */
 
-#define DEF_FREQUENCY_UP_THRESHOLD		(85)
-#define DEF_FREQUENCY_DOWN_THRESHOLD		(60)
+#define DEF_FREQUENCY_UP_THRESHOLD		(80)
+#define DEF_FREQUENCY_DOWN_THRESHOLD		(45)
 #define DEFAULT_SLEEP_MAX_FREQ 245760
 #define DEFAULT_SLEEP_MIN_FREQ 122880
+#define DEFAULT_SLEEP_PREV_FREQ 122880 //This is so that if there are any issues resulting in sleep_prev_freq getting set, there will be a backup freq
 static unsigned int suspended;
 static unsigned int sleep_max_freq=DEFAULT_SLEEP_MAX_FREQ;
 static unsigned int sleep_min_freq=DEFAULT_SLEEP_MIN_FREQ;
-static unsigned int sleep_prev_freq;
+static unsigned int sleep_prev_freq=DEFAULT_SLEEP_PREV_FREQ;
 /*
  * The polling frequency of this governor depends on the capability of
  * the processor. Default polling frequency is 1000 times the transition
@@ -378,7 +379,7 @@ static void smartass_suspend(int cpu, int suspend)
         {
             new_freq = sleep_max_freq;
         //If the current min speed is greater than the max sleep, we reset the min to 120mhz, for battery savings
-            if (policy->min > sleep_max_freq)
+            if (policy->min >= sleep_max_freq)
             {
                 sleep_prev_freq=policy->min;
                 policy->min= sleep_min_freq;
@@ -516,7 +517,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 
     		return;
     	}
-        else
+        else if(suspended)
         {
     		if (this_dbs_info->requested_freq == policy->max)
     			return;
