@@ -1,6 +1,7 @@
 /*
         Scary governor based off of conservatives source with some of smartasses features
-
+        
+        For devs - If you're going to port this driver to other devices, make sure to edit the default sleep frequencies & prev frequencies or else you might be going outside your devices hardware limits.
 */
 
 #include <linux/kernel.h>
@@ -30,10 +31,13 @@
 #define DEFAULT_SLEEP_MAX_FREQ 245760
 #define DEFAULT_SLEEP_MIN_FREQ 122880
 #define DEFAULT_SLEEP_PREV_FREQ 122880 //This is so that if there are any issues resulting in sleep_prev_freq getting set, there will be a backup freq
+#define DEFAULT_PREV_MAX 614400
 static unsigned int suspended;
 static unsigned int sleep_max_freq=DEFAULT_SLEEP_MAX_FREQ;
 static unsigned int sleep_min_freq=DEFAULT_SLEEP_MIN_FREQ;
 static unsigned int sleep_prev_freq=DEFAULT_SLEEP_PREV_FREQ;
+static unsigned int sleep_prev_max=DEFAULT_PREV_MAX;
+
 /*
  * The polling frequency of this governor depends on the capability of
  * the processor. Default polling frequency is 1000 times the transition
@@ -384,6 +388,11 @@ static void smartass_suspend(int cpu, int suspend)
                 sleep_prev_freq=policy->min;
                 policy->min= sleep_min_freq;
             }
+            if (policy->max > sleep_max_freq)
+            {
+                sleep_prev_max=policy->max;
+                policy->max=sleep_max_freq;
+            }
             if (new_freq > policy->max)
                 new_freq = policy->max;
             if (new_freq < policy->min)
@@ -395,6 +404,8 @@ static void smartass_suspend(int cpu, int suspend)
     {
         if (policy->min < sleep_prev_freq)
             policy->min=sleep_prev_freq;
+        if (policy->max < sleep_prev_max)
+            policy->max=sleep_prev_max;
     }
     
 }
@@ -499,45 +510,20 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		this_dbs_info->down_skip = 0;
 
 		/* if we are already at full speed then break out early */
-        if(!suspended)
-        {
-    		if (this_dbs_info->requested_freq == policy->max)
-    			return;
-
-    		freq_target = (dbs_tuners_ins.freq_step * policy->max) / 100;
-    		/* max freq cannot be less than 100. but who knows.... */
-    		if (unlikely(freq_target == 0))
-    			freq_target = 5;
+   		if (this_dbs_info->requested_freq == policy->max)
+   			return;
+   		freq_target = (dbs_tuners_ins.freq_step * policy->max) / 100;
+   		/* max freq cannot be less than 100. but who knows.... */
+   		if (unlikely(freq_target == 0))
+   			freq_target = 5;
     
-    		this_dbs_info->requested_freq += freq_target;
-    		if (this_dbs_info->requested_freq > policy->max)
-    			this_dbs_info->requested_freq = policy->max;
+   		this_dbs_info->requested_freq += freq_target;
+   		if (this_dbs_info->requested_freq > policy->max)
+   			this_dbs_info->requested_freq = policy->max;
 
-            __cpufreq_driver_target(policy, this_dbs_info->requested_freq,CPUFREQ_RELATION_H);
+        __cpufreq_driver_target(policy, this_dbs_info->requested_freq,CPUFREQ_RELATION_H);
 
-    		return;
-    	}
-        else if(suspended)
-        {
-    		if (this_dbs_info->requested_freq == policy->max)
-    			return;
-    		freq_target = (dbs_tuners_ins.freq_step * policy->max) / 100;
-    		/* max freq cannot be less than 100. but who knows.... */
-    		if (unlikely(freq_target == 0))
-    			freq_target = 5;
-   
-    		this_dbs_info->requested_freq += freq_target;
-    		if (this_dbs_info->requested_freq > policy->max)
-    			this_dbs_info->requested_freq = policy->max;
-
-             if(this_dbs_info->requested_freq > sleep_max_freq)
-                this_dbs_info->requested_freq = sleep_max_freq;
-
-            __cpufreq_driver_target(policy, this_dbs_info->requested_freq,CPUFREQ_RELATION_H);
-
-    		return;
-
-        }
+   		return;
     }
 
 	/*
