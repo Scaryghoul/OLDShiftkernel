@@ -379,10 +379,15 @@ static void smartass_suspend(int cpu, int suspend)
 
     if (suspend) 
     {
-        if (policy->cur > sleep_max_freq) 
+         if (policy->cur > sleep_max_freq) 
         {
             new_freq = sleep_max_freq;
-        //If the current min speed is greater than the max sleep, we reset the min to 120mhz, for battery savings
+            if (new_freq > policy->max)
+                new_freq = policy->max;
+            if (new_freq < policy->min)
+                new_freq = policy->min;
+        }
+       //If the current min speed is greater than the max sleep, we reset the min to 120mhz, for battery savings
             if (policy->min >= sleep_max_freq)
             {
                 sleep_prev_freq=policy->min;
@@ -393,12 +398,9 @@ static void smartass_suspend(int cpu, int suspend)
                 sleep_prev_max=policy->max;
                 policy->max=sleep_max_freq;
             }
-            if (new_freq > policy->max)
-                new_freq = policy->max;
-            if (new_freq < policy->min)
-                new_freq = policy->min;
-            __cpufreq_driver_target(policy, new_freq,CPUFREQ_RELATION_H);
         }
+             __cpufreq_driver_target(policy, new_freq,cpufreq_relation_h);
+       
     }
     else //Resetting the min speed
     {
